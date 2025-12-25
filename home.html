@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Home - DyslexiAI{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Enhanced Styling -->
+<section class="hero" style="padding: 6rem 0;">
+    <div class="container" style="position: relative; z-index: 10;">
+        <h1 style="font-size: 3.5rem; margin-bottom: 1.5rem; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); animation: slideDown 0.8s ease-out;">
+            Welcome to DyslexiAI
+        </h1>
+        <p style="font-size: 1.3rem; margin-bottom: 2.5rem; max-width: 700px; margin-left: auto; margin-right: auto; line-height: 1.8; animation: fadeIn 1s ease-out 0.2s backwards;">
+            Empowering learners with early detection, personalized support, and interactive learning tools
+        </p>
+        <div class="hero-buttons" style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; animation: fadeIn 1s ease-out 0.4s backwards;">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-lg" style="background: #ec4899; color: white; border: none; font-weight: 800;">
+                Sign In Now
+            </a>
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-lg" style="background: #ec4899; color: white; font-weight: 800;">
+                Get Started
+            </a>
+            <a href="{{ url_for('main.about') }}" class="btn btn-lg" style="background: #ec4899; color: white; font-weight: 800;">
+                Learn More
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section style="padding: 5rem 0; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h2 style="font-size: 2.5rem; color: #1f2937; margin-bottom: 1rem;">Why Choose DyslexiAI?</h2>
+            <p style="color: #6b7280; font-size: 1.1rem;">Comprehensive tools designed for effective learning</p>
+        </div>
+        <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Feature 1 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, rgba(91, 33, 182, 0.05), rgba(236, 72, 153, 0.05)); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #5b21b6; transition: all 0.3s ease; cursor: pointer;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔍</div>
+                <h3 style="color: #5b21b6; font-size: 1.5rem; margin-bottom: 1rem;">Accurate Detection</h3>
+                <p style="color: #64748b; line-height: 1.7;">Advanced AI-powered analysis of handwriting and speech patterns to detect dyslexia indicators with precision.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.05), rgba(14, 165, 233, 0.05)); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #ec4899; transition: all 0.3s ease; cursor: pointer;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🧠</div>
+                <h3 style="color: #ec4899; font-size: 1.5rem; margin-bottom: 1rem;">Personalized Support</h3>
+                <p style="color: #64748b; line-height: 1.7;">Get tailored recommendations based on your specific needs, learning style, and assessment results.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(34, 197, 94, 0.05)); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #0ea5e9; transition: all 0.3s ease; cursor: pointer;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">📚</div>
+                <h3 style="color: #0ea5e9; font-size: 1.5rem; margin-bottom: 1rem;">Rich Resources</h3>
+                <p style="color: #64748b; line-height: 1.7;">Comprehensive learning materials, interactive games, and expert guidance for continuous improvement.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(248, 113, 22, 0.05)); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #22c55e; transition: all 0.3s ease; cursor: pointer;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🎮</div>
+                <h3 style="color: #22c55e; font-size: 1.5rem; margin-bottom: 1rem;">Engaging Games</h3>
+                <p style="color: #64748b; line-height: 1.7;">Fun and interactive mini-games designed to enhance phonics, spelling, and language skills.</p>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, rgba(248, 113, 22, 0.05), rgba(168, 85, 247, 0.05)); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #f97316; transition: all 0.3s ease; cursor: pointer;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">📊</div>
+                <h3 style="color: #f97316; font-size: 1.5rem; margin-bottom: 1rem;">Progress Tracking</h3>
+                <p style="color: #64748b; line-height: 1.7;">Monitor your improvement over time with comprehensive analytics and progress dashboards.</p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.05), rgba(91, 33, 182, 0.05)); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #a855f7; transition: all 0.3s ease; cursor: pointer;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🛡️</div>
+                <h3 style="color: #a855f7; font-size: 1.5rem; margin-bottom: 1rem;">Safe & Secure</h3>
+                <p style="color: #64748b; line-height: 1.7;">Your data is protected with enterprise-grade security and privacy measures.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="hero" style="padding: 4rem 0; text-align: center;">
+    <div class="container" style="position: relative; z-index: 10;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Ready to Begin Your Journey?</h2>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Join thousands of learners who have already improved their reading and language skills with DyslexiaCheck.
+        </p>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-lg" style="background: #ec4899; color: white; font-weight: 800;">
+            Create Free Account
+        </a>
+    </div>
+</section>
+
+            <!-- Feature 1 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #6d28d9; border: 1px solid rgba(236, 72, 153, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔍</div>
+                <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">Accurate Detection</h3>
+                <p style="color: #6b7280; line-height: 1.7;">Advanced AI-powered analysis of handwriting and speech patterns to detect dyslexia indicators with precision.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #ec4899; border: 1px solid rgba(236, 72, 153, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🧠</div>
+                <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">Personalized Support</h3>
+                <p style="color: #6b7280; line-height: 1.7;">Get tailored recommendations based on your specific needs, learning style, and assessment results.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #0ea5e9; border: 1px solid rgba(236, 72, 153, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">📚</div>
+                <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">Rich Resources</h3>
+                <p style="color: #6b7280; line-height: 1.7;">Comprehensive learning materials, interactive games, and expert guidance for continuous improvement.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #22c55e; border: 1px solid rgba(236, 72, 153, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🎮</div>
+                <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">Engaging Games</h3>
+                <p style="color: #6b7280; line-height: 1.7;">Fun and interactive mini-games designed to enhance phonics, spelling, and language skills.</p>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #f97316; border: 1px solid rgba(236, 72, 153, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">📊</div>
+                <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">Progress Tracking</h3>
+                <p style="color: #6b7280; line-height: 1.7;">Monitor your improvement over time with comprehensive analytics and progress dashboards.</p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="feature-card" style="background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); padding: 2.5rem; border-radius: 1.25rem; border-top: 4px solid #a855f7; border: 1px solid rgba(236, 72, 153, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">🛡️</div>
+                <h3 style="color: #1f2937; font-size: 1.5rem; margin-bottom: 1rem;">Safe & Secure</h3>
+                <p style="color: #6b7280; line-height: 1.7;">Your data is protected with enterprise-grade security and privacy measures.</p>
+            </div>

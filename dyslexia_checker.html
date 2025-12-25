@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+
+{% block title %}DyslexiAI - Analysis Tool{% endblock %}
+
+{% block extra_css %}
+<!-- CSRF Token -->
+<meta name="csrf-token" content="{{ csrf_token() }}" />
+<style>
+.checker-container {
+    max-width: 800px;
+    margin: 2rem auto;
+}
+
+.test-option {
+    background: white;
+    padding: 2rem;
+    margin: 1rem 0;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.test-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.test-option h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.canvas-container {
+    border: 2px dashed var(--primary-color);
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    aspect-ratio: 4/3;
+    background-color: white;
+    cursor: crosshair;
+}
+
+.result-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.probability-bar {
+    width: 100%;
+    height: 30px;
+    background-color: var(--light-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.probability-fill {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: width 0.5s ease;
+}
+
+.risk-high {
+    background-color: var(--danger-color);
+}
+
+.risk-medium {
+    background-color: var(--warning-color);
+}
+
+.risk-low {
+    background-color: var(--success-color);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container checker-container">
+        <h1>Dyslexia Checker</h1>
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Choose a test to analyze potential dyslexia indicators</p>
+
+        <!-- Test Selection -->
+        <div id="testSelection">
+            <div class="test-option" onclick="showHandwritingTest()">
+                <h3>✍️ Handwriting Analysis</h3>
+                <p>Write a few words and let us analyze your handwriting patterns including letter spacing, slant, and consistency.</p>
+                <small class="text-light">Time: ~5 minutes</small>
+            </div>
+
+            <div class="test-option" onclick="showHandwritingUploadTest()">
+                <h3>📸 Upload Handwriting Image</h3>
+                <p>Upload an image of handwritten text (PNG, JPG) for analysis. Let us analyze your existing handwriting samples.</p>
+                <small class="text-light">Supported formats: PNG, JPG, JPEG</small>
+            </div>
+
+            <div class="test-option" onclick="showSpeechTest()">
+                <h3>🎤 Speech Analysis</h3>
+                <p>Record yourself reading a passage. We'll analyze speech patterns, pronunciation, and phonetic accuracy.</p>
+                <small class="text-light">Time: ~5 minutes</small>
+            </div>
+
+            <div class="test-option" onclick="showSpeechUploadTest()">
+                <h3>🎵 Upload Speech Audio</h3>
+                <p>Upload an MP3 audio file of your voice reading or speaking for speech pattern analysis.</p>
+                <small class="text-light">Supported format: MP3</small>
+            </div>
+
+            <a href="{{ url_for('dyslexia.history') }}" class="btn btn-secondary mt-2">
+                View Test History
+            </a>
+        </div>
+
+        <!-- Handwriting Test -->
+        <div id="handwritingTest" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Handwriting Analysis Test</h3>
+                    <button onclick="backToSelection()" class="btn btn-sm btn-outline" style="float: right;">← Back</button>
+                </div>
+                <div class="card-body">
+                    <p>Please write the following words in the canvas below:</p>
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; font-weight: bold;">
+                        "The quick brown fox jumps over the lazy dog"
+                    </div>
+                    
+                    <canvas id="handwritingCanvas" class="canvas-container"></canvas>
+                    
+                    <div>
+                        <button onclick="clearCanvas()" class="btn btn-secondary btn-sm">Clear Canvas</button>
+                        <button onclick="analyzeHandwriting()" class="btn btn-primary btn-sm">Analyze</button>
+                    </div>
+                    
+                    <div id="handwritingResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speech Test -->
+        <div id="speechTest" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Speech Analysis Test</h3>
+                    <button onclick="backToSelection()" class="btn btn-sm btn-outline" style="float: right;">← Back</button>
+                </div>
+                <div class="card-body">
+                    <p>Please read the following passage clearly:</p>
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
+                        "Reading is an important skill that helps us learn new things every day. With practice and support, anyone can improve their reading ability and enjoy the wonderful world of books and knowledge."
+                    </div>
+                    
+                    <div style="margin: 1.5rem 0;">
+                        <button id="recordBtn" onclick="startRecording()" class="btn btn-primary">🎤 Start Recording</button>
+                        <button id="stopBtn" onclick="stopRecording()" class="btn btn-danger" style="display: none;">⏹ Stop Recording</button>
+                    </div>
+                    
+                    <div id="audioPlayback"></div>
+                    <div id="speechResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Handwriting Upload Test -->
+        <div id="handwritingUploadTest" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Handwriting Image Upload</h3>
+                    <button onclick="backToSelection()" class="btn btn-sm btn-outline" style="float: right;">← Back</button>
+                </div>
+                <div class="card-body">
+                    <p>Upload an image of handwritten text for analysis:</p>
+                    
+                    <div style="border: 2px dashed var(--primary-color); border-radius: 0.5rem; padding: 2rem; text-align: center; margin: 1rem 0; background: var(--light-bg);">
+                        <input type="file" id="handwritingFileInput" accept="image/*" style="display: none;" onchange="previewHandwritingFile()">
+                        <button onclick="document.getElementById('handwritingFileInput').click()" class="btn btn-primary">
+                            📤 Choose Image File
+                        </button>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Accepted formats: PNG, JPG, JPEG</p>
+                        <div id="handwritingFilePreview" style="margin-top: 1rem;"></div>
+                    </div>
+                    
+                    <button onclick="analyzeUploadedHandwriting()" class="btn btn-primary btn-sm">Analyze Image</button>
+                    <button onclick="clearHandwritingFile()" class="btn btn-secondary btn-sm">Clear</button>
+                    
+                    <div id="handwritingUploadResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speech Upload Test -->
+        <div id="speechUploadTest" style="display: none;">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Speech Audio Upload</h3>
+                    <button onclick="backToSelection()" class="btn btn-sm btn-outline" style="float: right;">← Back</button>
+                </div>
+                <div class="card-body">
+                    <p>Upload an MP3 audio file for speech analysis:</p>
+                    
+                    <div style="border: 2px dashed var(--primary-color); border-radius: 0.5rem; padding: 2rem; text-align: center; margin: 1rem 0; background: var(--light-bg);">
+                        <input type="file" id="speechFileInput" accept="audio/mpeg,.mp3" style="display: none;" onchange="previewSpeechFile()">
+                        <button onclick="document.getElementById('speechFileInput').click()" class="btn btn-primary">
+                            🎵 Choose Audio File
+                        </button>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem;">Accepted format: MP3</p>
+                        <div id="speechFilePreview" style="margin-top: 1rem;"></div>
+                    </div>
+                    
+                    <button onclick="analyzeUploadedSpeech()" class="btn btn-primary btn-sm">Analyze Audio</button>
+                    <button onclick="clearSpeechFile()" class="btn btn-secondary btn-sm">Clear</button>
+                    
+                    <div id="speechUploadResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+let canvas, ctx;
+let isDrawing = false;
+let mediaRecorder;
+let audioChunks = [];
+
+window.addEventListener('load', function() {
+    canvas = document.getElementById('handwritingCanvas');
+    ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    
+    // Draw light grid
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < canvas.height; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+    }
+    
+    // Mouse events
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    });
+    
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#333';
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+    });
+    
+    canvas.addEventListener('mouseup', () => { isDrawing = false; });
+    canvas.addEventListener('mouseleave', () => { isDrawing = false; });
+});
+
+function showHandwritingTest() {
+    document.getElementById('testSelection').style.display = 'none';
+    document.getElementById('handwritingTest').style.display = 'block';
+}
+
+function showHandwritingUploadTest() {
+    document.getElementById('testSelection').style.display = 'none';
+    document.getElementById('handwritingUploadTest').style.display = 'block';
+}
+
+function showSpeechTest() {
+    document.getElementById('testSelection').style.display = 'none';
+    document.getElementById('speechTest').style.display = 'block';
+}
+
+function showSpeechUploadTest() {
+    document.getElementById('testSelection').style.display = 'none';
+    document.getElementById('speechUploadTest').style.display = 'block';
+}
+
+function backToSelection() {
+    document.getElementById('testSelection').style.display = 'block';
+    document.getElementById('handwritingTest').style.display = 'none';
+    document.getElementById('handwritingUploadTest').style.display = 'none';
+    document.getElementById('speechTest').style.display = 'none';
+    document.getElementById('speechUploadTest').style.display = 'none';
+    clearCanvas();
+}
+
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < canvas.height; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.width, i);
+        ctx.stroke();
+    }
+}
+
+async function analyzeHandwriting() {
+    const imageData = canvas.toDataURL();
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    try {
+        const response = await fetch('{{ url_for("dyslexia.check_handwriting") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ image: imageData })
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText.substring(0, 100)}`);
+        }
+        
+        const result = await response.json();
+        displayHandwritingResults(result);
+    } catch (error) {
+        console.error('Handwriting analysis error:', error);
+        alert('Error analyzing handwriting: ' + error.message);
+    }
+}
+
+function displayHandwritingResults(result) {
+    if (!result.success) {
+        alert('Error: ' + result.error);
+        return;
+    }
+    
+    const html = `
+        <div class="result-box fade-in">
+            <h3>Analysis Results</h3>
+            
+            <div>
+                <p><strong>Dyslexia Risk Probability:</strong></p>
+                <div class="probability-bar">
+                    <div class="probability-fill risk-${result.risk_level}" style="width: ${result.probability}%">
+                        ${result.probability.toFixed(1)}%
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <p><strong>Risk Level:</strong> <span class="text-${result.risk_level === 'high' ? 'danger' : result.risk_level === 'medium' ? 'warning' : 'success'}">
+                    ${result.risk_level.toUpperCase()}
+                </span></p>
+                ${result.confidence ? `<p style="margin-top: 0.5rem;"><strong>Analysis Confidence:</strong> ${(result.confidence * 100).toFixed(0)}%</p>` : ''}
+            </div>
+            
+            <div style="margin-top: 1.5rem;">
+                <h4>📊 Detailed Analysis Metrics:</h4>
+                <ul style="list-style: none;">
+                    ${Object.entries(result.analysis).map(([key, value]) => {
+                        const percentage = (value * 100).toFixed(1);
+                        const status = value > 0.75 ? '✓ Good' : value > 0.5 ? '⚠ Fair' : '✗ Needs Work';
+                        return `<li style="padding: 0.75rem 0; border-bottom: 1px solid #eee;">
+                            <strong>${key.replace(/_/g, ' ').toUpperCase()}:</strong> 
+                            <span style="float: right;">${percentage}% ${status}</span>
+                        </li>`;
+                    }).join('')}
+                </ul>
+            </div>
+            
+            <div style="margin-top: 1rem; background: #f0f8ff; padding: 1rem; border-left: 4px solid #2196F3; border-radius: 0.5rem;">
+                <h4 style="margin-top: 0;">📋 Analysis Summary:</h4>
+                <p style="font-size: 0.95rem; line-height: 1.6;">
+                    ${result.risk_level === 'high' ? 
+                        'This analysis suggests a <strong>higher likelihood of dyslexia indicators</strong>. We recommend consulting with an educational specialist for a comprehensive evaluation and personalized intervention plan.' : 
+                    result.risk_level === 'medium' ? 
+                        'This analysis shows <strong>moderate dyslexia indicators</strong>. Regular practice with targeted learning materials can help address identified areas.' :
+                        'This analysis shows <strong>lower dyslexia risk indicators</strong>. Continue with regular learning activities to maintain progress.'}
+                </p>
+            </div>
+            
+            ${result.recommendations ? `
+            <div style="margin-top: 2rem; background: var(--light-bg); padding: 1.5rem; border-radius: 0.5rem;">
+                <h4>🎯 Recommended Learning Materials:</h4>
+                <ul style="margin-top: 1rem; margin-left: 0; list-style: none;">
+                    ${result.recommendations.map(r => 
+                        `<li style="padding: 0.75rem 1rem; background: white; margin-bottom: 0.5rem; border-radius: 0.3rem; border-left: 3px solid ${r.priority === 'Critical' ? '#f44336' : r.priority === 'High' ? '#ff9800' : '#4caf50'};">
+                            <strong>${r.title}</strong> 
+                            <span style="color: #666; font-size: 0.9rem;">• ${r.category}</span>
+                            <span style="float: right; background: ${r.priority === 'Critical' ? '#ffebee' : r.priority === 'High' ? '#fff3e0' : '#e8f5e9'}; color: ${r.priority === 'Critical' ? '#c62828' : r.priority === 'High' ? '#e65100' : '#2e7d32'}; padding: 0.25rem 0.75rem; border-radius: 1rem; font-size: 0.8rem;">${r.priority}</span>
+                        </li>`
+                    ).join('')}
+                </ul>
+                <a href="{{ url_for('learning.index') }}" class="btn btn-primary mt-2">View All Learning Materials</a>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('handwritingResult').innerHTML = html;
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            analyzeSpeech(audioBlob);
+        };
+        
+        mediaRecorder.start();
+        document.getElementById('recordBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'inline-block';
+    } catch (error) {
+        alert('Microphone access denied: ' + error);
+    }
+}
+
+function stopRecording() {
+    mediaRecorder.stop();
+    document.getElementById('recordBtn').style.display = 'inline-block';
+    document.getElementById('stopBtn').style.display = 'none';
+}
+
+async function analyzeSpeech(audioBlob) {
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const formData = new FormData();
+        formData.append('audio', audioBlob);
+        
+        const response = await fetch('{{ url_for("dyslexia.check_speech") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ audio: 'audio_data_placeholder' })
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText.substring(0, 100)}`);
+        }
+        
+        const result = await response.json();
+        displaySpeechResults(result);
+    } catch (error) {
+        console.error('Speech analysis error:', error);
+        alert('Error analyzing speech: ' + error.message);
+    }
+}
+
+function displaySpeechResults(result) {
+    if (!result.success) {
+        alert('Error: ' + result.error);
+        return;
+    }
+    
+    const html = `
+        <div class="result-box fade-in">
+            <h3>Speech Analysis Results</h3>
+            
+            <div>
+                <p><strong>Dyslexia Risk Probability:</strong></p>
+                <div class="probability-bar">
+                    <div class="probability-fill risk-${result.risk_level}" style="width: ${result.probability}%">
+                        ${result.probability.toFixed(1)}%
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <p><strong>Risk Level:</strong> <span class="text-${result.risk_level === 'high' ? 'danger' : result.risk_level === 'medium' ? 'warning' : 'success'}">
+                    ${result.risk_level.toUpperCase()}
+                </span></p>
+            </div>
+            
+            <div style="margin-top: 1.5rem;">
+                <h4>Analysis Metrics:</h4>
+                <ul style="list-style: none;">
+                    ${Object.entries(result.analysis).map(([key, value]) => 
+                        `<li style="padding: 0.5rem 0;"><strong>${key.replace(/_/g, ' ')}:</strong> ${(value * 100).toFixed(1)}%</li>`
+                    ).join('')}
+                </ul>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('speechResult').innerHTML = html;
+}
+
+// File upload handlers
+function previewHandwritingFile() {
+    const fileInput = document.getElementById('handwritingFileInput');
+    const preview = document.getElementById('handwritingFilePreview');
+    const file = fileInput.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.innerHTML = `
+                <div style="margin-top: 1rem;">
+                    <img src="${e.target.result}" style="max-width: 100%; max-height: 300px; border-radius: 0.5rem;">
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--success-color);">✓ File selected: ${file.name}</p>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearHandwritingFile() {
+    document.getElementById('handwritingFileInput').value = '';
+    document.getElementById('handwritingFilePreview').innerHTML = '';
+    document.getElementById('handwritingUploadResult').innerHTML = '';
+}
+
+function previewSpeechFile() {
+    const fileInput = document.getElementById('speechFileInput');
+    const preview = document.getElementById('speechFilePreview');
+    const file = fileInput.files[0];
+    
+    if (file) {
+        preview.innerHTML = `
+            <div style="margin-top: 1rem;">
+                <audio controls style="width: 100%; max-width: 300px;">
+                    <source src="${URL.createObjectURL(file)}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--success-color);">✓ File selected: ${file.name}</p>
+            </div>
+        `;
+    }
+}
+
+function clearSpeechFile() {
+    document.getElementById('speechFileInput').value = '';
+    document.getElementById('speechFilePreview').innerHTML = '';
+    document.getElementById('speechUploadResult').innerHTML = '';
+}
+
+async function analyzeUploadedHandwriting() {
+    const fileInput = document.getElementById('handwritingFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a handwriting image file');
+        return;
+    }
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const formData = new FormData();
+    formData.append('handwriting_file', file);
+    
+    try {
+        const response = await fetch('{{ url_for("dyslexia.upload_handwriting") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText.substring(0, 100)}`);
+        }
+        
+        const result = await response.json();
+        displayHandwritingResults(result);
+        document.getElementById('handwritingUploadResult').innerHTML = document.getElementById('handwritingResult')?.innerHTML || '';
+    } catch (error) {
+        console.error('Handwriting analysis error:', error);
+        alert('Error analyzing handwriting: ' + error.message);
+    }
+}
+
+async function analyzeUploadedSpeech() {
+    const fileInput = document.getElementById('speechFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a speech audio file');
+        return;
+    }
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const formData = new FormData();
+    formData.append('speech_file', file);
+    
+    try {
+        const response = await fetch('{{ url_for("dyslexia.upload_speech") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error (${response.status}): ${errorText.substring(0, 100)}`);
+        }
+        
+        const result = await response.json();
+        displaySpeechResults(result);
+        document.getElementById('speechUploadResult').innerHTML = document.getElementById('speechResult')?.innerHTML || '';
+    } catch (error) {
+        console.error('Speech analysis error:', error);
+        alert('Error analyzing speech: ' + error.message);
+    }
+}
+</script>
+{% endblock %}

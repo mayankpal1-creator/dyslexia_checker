@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Word Puzzle Game{% endblock %}
+
+{% block extra_css %}
+<style>
+.puzzle-container {
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.word-display {
+    background: white;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 0.2rem;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scrambled-word {
+    color: var(--primary-color);
+    font-family: monospace;
+}
+
+.input-section {
+    margin: 2rem 0;
+}
+
+.hint-box {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--warning-color);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container puzzle-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>🔤 Word Puzzle</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Unscramble the letters to form a word!</p>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <p class="text-light">Puzzle <span id="puzzleNumber">1</span> of 10</p>
+                    <div class="progress-bar" style="width: 100%; height: 10px; background: var(--light-bg); border-radius: 5px; margin-bottom: 1rem;">
+                        <div id="progressFill" style="width: 10%; height: 100%; background: var(--primary-color); border-radius: 5px;"></div>
+                    </div>
+                </div>
+
+                <div class="hint-box">
+                    <strong>Hint:</strong> <span id="hint">Letters are scrambled</span>
+                </div>
+
+                <div class="word-display">
+                    <span class="scrambled-word" id="scrambledWord">DROW</span>
+                </div>
+
+                <div class="input-section">
+                    <input type="text" id="answerInput" placeholder="Type your answer here..." style="width: 100%; padding: 1rem;">
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="checkAnswer()" class="btn btn-primary btn-block">Check Answer</button>
+                    <button onclick="skipPuzzle()" class="btn btn-secondary btn-block">Skip</button>
+                </div>
+
+                <div id="result" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button onclick="saveGameScore()" class="btn btn-success">Save Score</button>
+        </div>
+    </div>
+</section>
+
+<script>
+const puzzles = [
+    { word: 'WORD', hint: 'A unit of language' },
+    { word: 'READING', hint: 'Understanding written text' },
+    { word: 'BOOK', hint: 'Contains pages and stories' },
+    { word: 'LETTER', hint: 'Part of the alphabet' },
+    { word: 'LEARN', hint: 'To gain knowledge' },
+    { word: 'SKILL', hint: 'An ability or talent' },
+    { word: 'BRAIN', hint: 'Center of thought' },
+    { word: 'MEMORY', hint: 'Ability to recall' },
+    { word: 'FOCUS', hint: 'To concentrate' },
+    { word: 'ACHIEVE', hint: 'To accomplish' }
+];
+
+let currentPuzzle = 0;
+let score = 0;
+let startTime = Date.now();
+
+function shuffle(str) {
+    return str.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+function loadPuzzle() {
+    const puzzle = puzzles[currentPuzzle];
+    document.getElementById('scrambledWord').textContent = shuffle(puzzle.word);
+    document.getElementById('hint').textContent = puzzle.hint;
+    document.getElementById('puzzleNumber').textContent = currentPuzzle + 1;
+    document.getElementById('progressFill').style.width = ((currentPuzzle + 1) / puzzles.length * 100) + '%';
+    document.getElementById('answerInput').value = '';
+    document.getElementById('result').innerHTML = '';
+    document.getElementById('answerInput').focus();
+}
+
+function checkAnswer() {
+    const userAnswer = document.getElementById('answerInput').value.toUpperCase().trim();
+    const correctAnswer = puzzles[currentPuzzle].word;
+    
+    if (userAnswer === correctAnswer) {
+        score += 10;
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-success">
+                ✓ Correct! The word is "${correctAnswer}"
+            </div>
+        `;
+        setTimeout(() => {
+            if (currentPuzzle < puzzles.length - 1) {
+                currentPuzzle++;
+                loadPuzzle();
+            } else {
+                endGame();
+            }
+        }, 1500);
+    } else {
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-danger">
+                ✗ Incorrect. Try again!
+            </div>
+        `;
+    }
+}
+
+function skipPuzzle() {
+    if (currentPuzzle < puzzles.length - 1) {
+        currentPuzzle++;
+        loadPuzzle();
+    } else {
+        endGame();
+    }
+}
+
+function endGame() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    alert(`Game Complete! You scored ${score} points in ${timeElapsed} seconds`);
+}
+
+function saveGameScore() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Word Puzzle',
+        score: score,
+        time_taken: timeElapsed,
+        difficulty: 'medium'
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! ' + score + ' points');
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', loadPuzzle);
+document.getElementById('answerInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') checkAnswer();
+});
+</script>
+{% endblock %}

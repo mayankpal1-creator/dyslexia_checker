@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Typing Master Game{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 700px; margin: 2rem auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>⌨️ Typing Master</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Type as many words as you can in 60 seconds!</p>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; text-align: center;">
+                        <p class="text-light">Time</p>
+                        <h3 id="timer" style="color: var(--primary-color);">60</h3>
+                    </div>
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; text-align: center;">
+                        <p class="text-light">Words</p>
+                        <h3 id="wordCount" style="color: var(--success-color);">0</h3>
+                    </div>
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; text-align: center;">
+                        <p class="text-light">Score</p>
+                        <h3 id="score" style="color: var(--info-color);">0</h3>
+                    </div>
+                </div>
+
+                <input type="text" id="typingInput" placeholder="Start typing..." style="width: 100%; padding: 1.5rem; font-size: 1.1rem; margin-bottom: 1rem;">
+                
+                <div id="gameResult"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+let timeLeft = 60;
+let wordCount = 0;
+let gameActive = false;
+
+function startGame() {
+    gameActive = true;
+    document.getElementById('typingInput').focus();
+    
+    const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').textContent = timeLeft;
+        
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            endGame();
+        }
+    }, 1000);
+}
+
+document.getElementById('typingInput').addEventListener('keydown', (e) => {
+    if (!gameActive && e.code === 'Space') {
+        e.preventDefault();
+        startGame();
+    }
+});
+
+document.getElementById('typingInput').addEventListener('input', (e) => {
+    if (!gameActive) return;
+    
+    const text = e.target.value;
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    wordCount = words.length;
+    
+    document.getElementById('wordCount').textContent = wordCount;
+    document.getElementById('score').textContent = wordCount * 10;
+});
+
+function endGame() {
+    gameActive = false;
+    document.getElementById('typingInput').disabled = true;
+    
+    const score = wordCount * 10;
+    document.getElementById('gameResult').innerHTML = `
+        <div class="alert alert-success">
+            <h3>🎉 Game Over!</h3>
+            <p>You typed ${wordCount} words!</p>
+            <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">Score: ${score} points</p>
+        </div>
+    `;
+    
+    saveGameScore();
+}
+
+function saveGameScore() {
+    const score = wordCount * 10;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Typing Master',
+        score: score,
+        time_taken: 60 - timeLeft,
+        difficulty: 'medium'
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! WPM: ' + wordCount);
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', () => {
+    document.getElementById('typingInput').focus();
+});
+</script>
+{% endblock %}

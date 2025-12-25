@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Phonics Quest Game{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 600px; margin: 2rem auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>🎯 Phonics Quest</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Master phonetic sounds and letter combinations!</p>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; text-align: center;">
+                        <p class="text-light">Challenge</p>
+                        <h3 id="challengeNumber" style="color: var(--primary-color);">1/10</h3>
+                    </div>
+                    <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem; text-align: center;">
+                        <p class="text-light">Score</p>
+                        <h3 id="finalScore" style="color: var(--success-color);">0</h3>
+                    </div>
+                </div>
+
+                <div style="background: white; border: 3px solid var(--primary-color); padding: 2rem; border-radius: 0.5rem; text-align: center; margin: 2rem 0; font-size: 2rem; font-weight: bold;">
+                    <div id="soundDisplay">PH</div>
+                </div>
+
+                <p style="text-align: center; margin-bottom: 1rem;">Which word contains this sound?</p>
+
+                <div id="choicesContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"></div>
+
+                <div id="result" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+const phonicsChallenges = [
+    { sound: 'PH', choices: ['photo', 'hello', 'phone', 'house'], answer: 'photo' },
+    { sound: 'CH', choices: ['chart', 'smile', 'chase', 'light'], answer: 'chart' },
+    { sound: 'SH', choices: ['share', 'money', 'shape', 'tree'], answer: 'share' },
+    { sound: 'TH', choices: ['think', 'please', 'three', 'friend'], answer: 'think' },
+    { sound: 'NG', choices: ['ring', 'like', 'sing', 'hope'], answer: 'ring' },
+    { sound: 'QU', choices: ['queen', 'happy', 'quick', 'slow'], answer: 'queen' },
+    { sound: 'OO', choices: ['book', 'moon', 'cool', 'help'], answer: 'book' },
+    { sound: 'AI', choices: ['rain', 'sleep', 'main', 'cold'], answer: 'rain' },
+    { sound: 'EA', choices: ['sea', 'happy', 'seat', 'jump'], answer: 'sea' },
+    { sound: 'OW', choices: ['cow', 'green', 'how', 'blue'], answer: 'cow' }
+];
+
+let currentChallenge = 0;
+let score = 0;
+let startTime = Date.now();
+
+function loadChallenge() {
+    const challenge = phonicsChallenges[currentChallenge];
+    document.getElementById('soundDisplay').textContent = challenge.sound;
+    document.getElementById('challengeNumber').textContent = (currentChallenge + 1) + '/10';
+    document.getElementById('result').innerHTML = '';
+    
+    const shuffled = [...challenge.choices].sort(() => Math.random() - 0.5);
+    
+    const container = document.getElementById('choicesContainer');
+    container.innerHTML = '';
+    
+    shuffled.forEach(word => {
+        const button = document.createElement('button');
+        button.className = 'btn btn-lg';
+        button.textContent = word;
+        button.style.cssText = 'padding: 2rem; text-transform: uppercase;';
+        button.onclick = () => checkAnswer(word, word === challenge.answer);
+        container.appendChild(button);
+    });
+}
+
+function checkAnswer(word, isCorrect) {
+    if (isCorrect) {
+        score += 10;
+        document.getElementById('finalScore').textContent = score;
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-success">
+                ✓ Correct! "${word}" contains the "${phonicsChallenges[currentChallenge].sound}" sound
+            </div>
+        `;
+        setTimeout(() => {
+            if (currentChallenge < phonicsChallenges.length - 1) {
+                currentChallenge++;
+                loadChallenge();
+            } else {
+                endGame();
+            }
+        }, 1500);
+    } else {
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-danger">
+                ✗ Incorrect. Try again!
+            </div>
+        `;
+    }
+}
+
+function endGame() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    alert(`Game Complete! You scored ${score} points in ${timeElapsed} seconds`);
+    saveGameScore();
+}
+
+function saveGameScore() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Phonics Quest',
+        score: score,
+        time_taken: timeElapsed,
+        difficulty: 'hard'
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! ' + score + ' points');
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', loadChallenge);
+</script>
+{% endblock %}

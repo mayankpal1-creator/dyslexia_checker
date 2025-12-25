@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Sentence Builder Game{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 700px; margin: 2rem auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>📝 Sentence Builder</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Arrange the words to form a correct sentence!</p>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <p class="text-light">Sentence <span id="sentenceNumber">1</span> of 8</p>
+                </div>
+
+                <div style="background: var(--light-bg); padding: 2rem; border-radius: 0.5rem; margin-bottom: 2rem; min-height: 100px;">
+                    <p class="text-light" style="margin-bottom: 1rem;">Your sentence:</p>
+                    <div id="selectedWords" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 40px;">
+                        <p class="text-light">Drag words here</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <p class="text-light" style="margin-bottom: 1rem;">Available words:</p>
+                    <div id="availableWords" style="display: flex; flex-wrap: wrap; gap: 0.5rem;"></div>
+                </div>
+
+                <div>
+                    <button onclick="checkSentence()" class="btn btn-primary btn-block">Check Sentence</button>
+                </div>
+
+                <div id="result" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+const sentences = [
+    { words: ['The', 'cat', 'sits', 'on', 'the', 'mat'], correct: ['The', 'cat', 'sits', 'on', 'the', 'mat'] },
+    { words: ['I', 'like', 'to', 'read', 'books'], correct: ['I', 'like', 'to', 'read', 'books'] },
+    { words: ['She', 'plays', 'in', 'the', 'park'], correct: ['She', 'plays', 'in', 'the', 'park'] },
+    { words: ['They', 'eat', 'breakfast', 'in', 'the', 'morning'], correct: ['They', 'eat', 'breakfast', 'in', 'the', 'morning'] },
+    { words: ['He', 'walks', 'to', 'school', 'every', 'day'], correct: ['He', 'walks', 'to', 'school', 'every', 'day'] },
+    { words: ['We', 'play', 'games', 'together'], correct: ['We', 'play', 'games', 'together'] },
+    { words: ['The', 'bird', 'flies', 'in', 'the', 'sky'], correct: ['The', 'bird', 'flies', 'in', 'the', 'sky'] },
+    { words: ['She', 'drinks', 'milk', 'with', 'breakfast'], correct: ['She', 'drinks', 'milk', 'with', 'breakfast'] }
+];
+
+let currentSentence = 0;
+let score = 0;
+let selectedWords = [];
+let startTime = Date.now();
+
+function loadSentence() {
+    const sentence = sentences[currentSentence];
+    const shuffled = [...sentence.words].sort(() => Math.random() - 0.5);
+    
+    document.getElementById('sentenceNumber').textContent = currentSentence + 1;
+    selectedWords = [];
+    
+    const container = document.getElementById('availableWords');
+    container.innerHTML = '';
+    
+    shuffled.forEach(word => {
+        const button = document.createElement('button');
+        button.className = 'btn btn-sm';
+        button.textContent = word;
+        button.style.cssText = 'margin: 0.25rem;';
+        button.onclick = () => addWord(word);
+        container.appendChild(button);
+    });
+    
+    updateSelectedDisplay();
+    document.getElementById('result').innerHTML = '';
+}
+
+function addWord(word) {
+    selectedWords.push(word);
+    updateSelectedDisplay();
+}
+
+function updateSelectedDisplay() {
+    const container = document.getElementById('selectedWords');
+    if (selectedWords.length === 0) {
+        container.innerHTML = '<p class="text-light">Drag words here</p>';
+    } else {
+        container.innerHTML = selectedWords.map(word => 
+            `<span style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 0.25rem;">${word}</span>`
+        ).join('');
+    }
+}
+
+function checkSentence() {
+    const correctSentence = sentences[currentSentence].correct;
+    const isCorrect = selectedWords.length === correctSentence.length &&
+                      selectedWords.every((word, i) => word === correctSentence[i]);
+    
+    if (isCorrect) {
+        score += 10;
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-success">
+                ✓ Correct! "${selectedWords.join(' ')}"
+            </div>
+        `;
+        setTimeout(() => {
+            if (currentSentence < sentences.length - 1) {
+                currentSentence++;
+                loadSentence();
+            } else {
+                endGame();
+            }
+        }, 1500);
+    } else {
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-danger">
+                ✗ Incorrect. Try again!
+            </div>
+        `;
+    }
+}
+
+function endGame() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    alert(`Game Complete! You scored ${score} points`);
+    saveGameScore();
+}
+
+function saveGameScore() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Sentence Builder',
+        score: score,
+        time_taken: timeElapsed,
+        difficulty: 'hard'
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! ' + score + ' points');
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', loadSentence);
+</script>
+{% endblock %}

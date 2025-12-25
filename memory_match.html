@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Memory Match Game{% endblock %}
+
+{% block extra_css %}
+<style>
+.game-container {
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.memory-card {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: white;
+    font-weight: bold;
+}
+
+.memory-card:hover {
+    transform: scale(1.05);
+}
+
+.memory-card.flipped {
+    background: white;
+    color: var(--text-dark);
+    border: 2px solid var(--primary-color);
+}
+
+.game-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.stat-box {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container game-container">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>🧠 Memory Match</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Match pairs of cards to complete the game. Click on cards to reveal them!</p>
+
+        <div class="game-stats">
+            <div class="stat-box">
+                <div class="text-light">Matches</div>
+                <div class="stat-value" id="matches">0/8</div>
+            </div>
+            <div class="stat-box">
+                <div class="text-light">Moves</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="text-light">Time</div>
+                <div class="stat-value" id="timer">0:00</div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button onclick="initGame()" class="btn btn-primary">New Game</button>
+            <button onclick="saveGameScore()" class="btn btn-success">Save Score</button>
+        </div>
+
+        <div id="gameResult"></div>
+    </div>
+</section>
+
+<script>
+let cards = [];
+let matched = 0;
+let moves = 0;
+let timeElapsed = 0;
+let gameActive = true;
+let flippedCards = [];
+let timer;
+
+const cardPairs = ['🍎', '🐶', '🌻', '🎨', '📚', '🎮', '🎵', '🌟'];
+
+function initGame() {
+    cards = [];
+    cardPairs.forEach(pair => {
+        cards.push(pair);
+        cards.push(pair);
+    });
+    cards.sort(() => Math.random() - 0.5);
+    
+    matched = 0;
+    moves = 0;
+    timeElapsed = 0;
+    gameActive = true;
+    flippedCards = [];
+    
+    clearInterval(timer);
+    timer = setInterval(() => {
+        timeElapsed++;
+        const minutes = Math.floor(timeElapsed / 60);
+        const seconds = timeElapsed % 60;
+        document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+    
+    renderBoard();
+    updateStats();
+}
+
+function renderBoard() {
+    const board = document.getElementById('gameBoard');
+    board.innerHTML = '';
+    
+    cards.forEach((card, index) => {
+        const button = document.createElement('button');
+        button.className = 'memory-card';
+        button.textContent = flippedCards.includes(index) ? card : '?';
+        button.onclick = () => cardClicked(index, card);
+        board.appendChild(button);
+    });
+}
+
+function cardClicked(index, card) {
+    if (!gameActive || flippedCards.includes(index) || flippedCards.length >= 2) return;
+    
+    flippedCards.push(index);
+    renderBoard();
+    
+    if (flippedCards.length === 2) {
+        moves++;
+        if (cards[flippedCards[0]] === cards[flippedCards[1]]) {
+            matched++;
+            flippedCards = [];
+            updateStats();
+            if (matched === cardPairs.length) {
+                endGame();
+            }
+        } else {
+            setTimeout(() => {
+                flippedCards = [];
+                renderBoard();
+            }, 1000);
+        }
+        updateStats();
+    }
+}
+
+function updateStats() {
+    document.getElementById('matches').textContent = `${matched}/${cardPairs.length}`;
+    document.getElementById('moves').textContent = moves;
+}
+
+function endGame() {
+    gameActive = false;
+    clearInterval(timer);
+    
+    const score = Math.max(0, 100 - (moves * 2));
+    const html = `
+        <div class="card mt-3" style="background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%); color: white;">
+            <div class="card-body text-center">
+                <h2>🎉 Game Complete!</h2>
+                <p style="font-size: 1.1rem; margin: 1rem 0;">You matched all pairs!</p>
+                <div style="font-size: 2rem; font-weight: bold; margin: 1rem 0;">${score} Points</div>
+                <p>Completed in ${timeElapsed} seconds with ${moves} moves</p>
+            </div>
+        </div>
+    `;
+    document.getElementById('gameResult').innerHTML = html;
+}
+
+function saveGameScore() {
+    const score = Math.max(0, 100 - (moves * 2));
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Memory Match',
+        score: score,
+        time_taken: timeElapsed,
+        difficulty: 'medium',
+        completed: matched === cardPairs.length
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! ' + score + ' points');
+              // Redirect to scoreboard after 1 second
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', initGame);
+</script>
+{% endblock %}

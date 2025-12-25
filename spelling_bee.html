@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Spelling Bee Game{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 600px; margin: 2rem auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>🐝 Spelling Bee</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Listen to the words and spell them correctly!</p>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <p class="text-light">Word <span id="wordNumber">1</span> of 10</p>
+                </div>
+
+                <div style="text-align: center; margin: 2rem 0;">
+                    <button onclick="playAudio()" class="btn btn-primary btn-lg">🔊 Play Word</button>
+                </div>
+
+                <div>
+                    <input type="text" id="spellingInput" placeholder="Type the word..." style="width: 100%; padding: 1rem; margin-bottom: 1rem;">
+                    <button onclick="checkSpelling()" class="btn btn-primary btn-block">Check Spelling</button>
+                </div>
+
+                <div id="spellingResult" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+const words = [
+    'beautiful', 'receive', 'friend', 'rhythm', 'necessary',
+    'accommodate', 'definitely', 'occurrence', 'privilege', 'conscience'
+];
+
+let currentWord = 0;
+let score = 0;
+let startTime = Date.now();
+
+function loadWord() {
+    document.getElementById('wordNumber').textContent = currentWord + 1;
+    document.getElementById('spellingInput').value = '';
+    document.getElementById('spellingResult').innerHTML = '';
+    document.getElementById('spellingInput').focus();
+}
+
+function playAudio() {
+    const word = words[currentWord];
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.rate = 0.8;
+    window.speechSynthesis.speak(utterance);
+}
+
+function checkSpelling() {
+    const userSpelling = document.getElementById('spellingInput').value.toLowerCase().trim();
+    const correctSpelling = words[currentWord];
+    
+    if (userSpelling === correctSpelling) {
+        score += 10;
+        document.getElementById('spellingResult').innerHTML = `
+            <div class="alert alert-success">
+                ✓ Correct! "${correctSpelling}"
+            </div>
+        `;
+        setTimeout(() => {
+            if (currentWord < words.length - 1) {
+                currentWord++;
+                loadWord();
+            } else {
+                endGame();
+            }
+        }, 1500);
+    } else {
+        document.getElementById('spellingResult').innerHTML = `
+            <div class="alert alert-danger">
+                ✗ Incorrect. The correct spelling is "${correctSpelling}"
+            </div>
+        `;
+    }
+}
+
+function endGame() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    alert(`Game Complete! You scored ${score} points`);
+    saveGameScore();
+}
+
+function saveGameScore() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Spelling Bee',
+        score: score,
+        time_taken: timeElapsed,
+        difficulty: 'medium'
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! ' + score + ' points');
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', loadWord);
+document.getElementById('spellingInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') checkSpelling();
+});
+</script>
+{% endblock %}

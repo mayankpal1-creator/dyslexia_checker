@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Services - DyslexiAI{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1>Our Services</h1>
+        <p>Comprehensive dyslexia support and learning platform</p>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <h2>What We Offer</h2>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h3>1. Dyslexia Checker</h3>
+                        <p>Our advanced analysis tools examine handwriting and speech patterns to identify potential dyslexia indicators:</p>
+                        <ul style="margin-left: 2rem;">
+                            <li><strong>Handwriting Analysis:</strong> Evaluates letter spacing, slant, pressure, and consistency</li>
+                            <li><strong>Speech Analysis:</strong> Assesses pronunciation, speech rate, and phonetic accuracy</li>
+                            <li><strong>Risk Assessment:</strong> Provides a detailed probability score and risk level</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-2">
+                    <div class="card-body">
+                        <h3>2. Learning Materials</h3>
+                        <p>Comprehensive, personalized learning resources including:</p>
+                        <ul style="margin-left: 2rem;">
+                            <li>Phonics and sound recognition exercises</li>
+                            <li>Sight words training programs</li>
+                            <li>Reading comprehension activities</li>
+                            <li>Vocabulary building exercises</li>
+                            <li>Spelling practice modules</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-2">
+                    <div class="card-body">
+                        <h3>3. Interactive Games</h3>
+                        <p>Seven educational games designed to make learning fun:</p>
+                        <ul style="margin-left: 2rem;">
+                            <li>Memory Match - Enhance memory and recognition</li>
+                            <li>Word Puzzle - Build vocabulary and problem-solving</li>
+                            <li>Spelling Bee - Practice correct spelling</li>
+                            <li>Typing Master - Improve typing skills and speed</li>
+                            <li>Rhyme Match - Develop phonetic awareness</li>
+                            <li>Sentence Builder - Learn grammar and sentence construction</li>
+                            <li>Phonics Quest - Master phonetic sounds</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mt-2">
+                    <div class="card-body">
+                        <h3>4. Progress Tracking</h3>
+                        <p>Monitor your journey with detailed analytics:</p>
+                        <ul style="margin-left: 2rem;">
+                            <li>Score tracking across all games and assessments</li>
+                            <li>Progress visualization and reporting</li>
+                            <li>Learning material completion tracking</li>
+                            <li>Performance trends and insights</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="light-bg">
+    <div class="container">
+        <h2>Get Started Today</h2>
+        <p style="text-align: center; margin-bottom: 2rem;">Join our community and begin your journey to better reading skills</p>
+        <div style="text-align: center;">
+            <a href="{{ url_for('auth.signup') }}" class="btn btn-lg btn-primary">Create Account</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

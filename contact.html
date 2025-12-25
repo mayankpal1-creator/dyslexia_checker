@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Contact - DyslexiAI{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p>We'd love to hear from you</p>
+    </div>
+</section>
+
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <h2>Get In Touch</h2>
+                <form method="POST" class="mt-2">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" name="subject" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea name="message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+                </form>
+            </div>
+            <div class="col-6">
+                <h2>Contact Information</h2>
+                <div class="mt-2">
+                    <h4>📍 Address</h4>
+                    <p>DyslexiaCheck Support Center<br>123 Education Street<br>Learning City, LC 12345</p>
+                    
+                    <h4 style="margin-top: 2rem;">📧 Email</h4>
+                    <p><a href="mailto:support@dyslexiacheck.com">support@dyslexiacheck.com</a></p>
+                    
+                    <h4 style="margin-top: 2rem;">📞 Phone</h4>
+                    <p>+1 (555) 123-4567</p>
+                    
+                    <h4 style="margin-top: 2rem;">⏰ Hours</h4>
+                    <p>Monday - Friday: 9:00 AM - 6:00 PM<br>
+                    Saturday: 10:00 AM - 4:00 PM<br>
+                    Sunday: Closed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="light-bg">
+    <div class="container">
+        <h2>FAQ</h2>
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h4>How accurate is the dyslexia checker?</h4>
+                        <p>Our tool uses advanced AI analysis, but a professional diagnosis should be confirmed by a healthcare provider.</p>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h4>Is the platform suitable for children?</h4>
+                        <p>Yes! DyslexiaCheck is designed for users of all ages with age-appropriate content and games.</p>
+                    </div>
+                </div>
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h4>Can I track my progress?</h4>
+                        <p>Absolutely! The platform provides detailed analytics and progress tracking for all users.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h4>Is my data secure?</h4>
+                        <p>We take data privacy seriously. All user data is encrypted and stored securely.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

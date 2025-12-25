@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Rhyme Match Game{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container" style="max-width: 600px; margin: 2rem auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>🎵 Rhyme Match</h1>
+            <a href="{{ url_for('games.index') }}" class="btn btn-secondary">← Back</a>
+        </div>
+
+        <p>Match words that rhyme with each other!</p>
+
+        <div class="card">
+            <div class="card-body">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <p class="text-light">Round <span id="roundNumber">1</span> of 5</p>
+                </div>
+
+                <div style="background: var(--light-bg); padding: 2rem; border-radius: 0.5rem; text-align: center; margin: 2rem 0; font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
+                    <div id="referenceWord">CAT</div>
+                </div>
+
+                <p style="text-align: center; margin-bottom: 1rem;">Choose the word that rhymes:</p>
+
+                <div id="optionsContainer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;"></div>
+
+                <div id="result" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+const rhymePairs = [
+    { word: 'CAT', rhymes: ['BAT', 'MOON', 'HAT', 'STAR'] },
+    { word: 'DOG', rhymes: ['LOG', 'SUN', 'FOG', 'CLOUD'] },
+    { word: 'BOOK', rhymes: ['LOOK', 'TREE', 'COOK', 'FLOWER'] },
+    { word: 'FLY', rhymes: ['SKY', 'WATER', 'TRY', 'GROUND'] },
+    { word: 'SING', rhymes: ['RING', 'WALK', 'WING', 'JUMP'] }
+];
+
+let currentRound = 0;
+let score = 0;
+let startTime = Date.now();
+
+function loadRound() {
+    const round = rhymePairs[currentRound];
+    document.getElementById('referenceWord').textContent = round.word;
+    document.getElementById('roundNumber').textContent = currentRound + 1;
+    document.getElementById('result').innerHTML = '';
+    
+    // Shuffle rhymes
+    const shuffled = round.rhymes.sort(() => Math.random() - 0.5);
+    
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+    
+    shuffled.forEach(word => {
+        const isCorrect = rhymePairs[currentRound].rhymes[0] === word;
+        const button = document.createElement('button');
+        button.className = 'btn btn-lg';
+        button.textContent = word;
+        button.style.cssText = 'padding: 2rem;';
+        button.onclick = () => checkRhyme(word, isCorrect);
+        container.appendChild(button);
+    });
+}
+
+function checkRhyme(word, isCorrect) {
+    if (isCorrect) {
+        score += 10;
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-success">
+                ✓ Correct! "${word}" rhymes with "${rhymePairs[currentRound].word}"
+            </div>
+        `;
+        setTimeout(() => {
+            if (currentRound < rhymePairs.length - 1) {
+                currentRound++;
+                loadRound();
+            } else {
+                endGame();
+            }
+        }, 1500);
+    } else {
+        document.getElementById('result').innerHTML = `
+            <div class="alert alert-danger">
+                ✗ Incorrect. Try again!
+            </div>
+        `;
+    }
+}
+
+function endGame() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    alert(`Game Complete! You scored ${score} points`);
+    saveGameScore();
+}
+
+function saveGameScore() {
+    const timeElapsed = Math.floor((Date.now() - startTime) / 1000);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    const payload = {
+        game_name: 'Rhyme Match',
+        score: score,
+        time_taken: timeElapsed,
+        difficulty: 'easy'
+    };
+    
+    console.log('Sending payload:', payload);
+    
+    fetch('{{ url_for("games.save_score") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    }).then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+      .then(data => {
+          console.log('Response data:', data);
+          if (data.success) {
+              alert('✅ Score saved! ' + score + ' points');
+              setTimeout(() => {
+                  window.location.href = '{{ url_for("games.scores") }}';
+              }, 1000);
+          } else {
+              alert('❌ Error saving score: ' + (data.error || 'Unknown error'));
+          }
+      })
+      .catch(error => {
+          console.error('Save error:', error);
+          alert('❌ Error: ' + error.message);
+      });
+}
+
+window.addEventListener('load', loadRound);
+</script>
+{% endblock %}

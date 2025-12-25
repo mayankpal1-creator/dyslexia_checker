@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Dyslexia Test History{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Test History</h1>
+            <a href="{{ url_for('dyslexia.index') }}" class="btn btn-primary">← Back to Checker</a>
+        </div>
+
+        {% if tests %}
+            <div class="row" style="grid-template-columns: 1fr;">
+                {% for test in tests %}
+                    <div class="card">
+                        <div class="card-body">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <h3>{{ test.test_type.title() }} Test</h3>
+                                    <p class="text-light">{{ test.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">
+                                        {{ "%.1f"|format(test.dyslexia_probability) }}%
+                                    </div>
+                                    <div class="text-{{ 'danger' if test.risk_level == 'high' else 'warning' if test.risk_level == 'medium' else 'success' }}" style="font-weight: bold;">
+                                        {{ test.risk_level.upper() }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                <h4>Analysis Metrics:</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                    {% for key, value in test.analysis_results.items() %}
+                                        <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.5rem;">
+                                            <small class="text-light">{{ key.replace('_', ' ').title() }}</small>
+                                            <div style="font-size: 1.25rem; font-weight: bold; color: var(--primary-color);">
+                                                {{ "%.1f"|format(value * 100) }}%
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            {% if test.recommendations %}
+                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                                    <h4>Recommended Materials:</h4>
+                                    <ul style="list-style: none; margin-top: 0.5rem;">
+                                        {% for rec in test.recommendations %}
+                                            <li style="padding: 0.25rem 0;">
+                                                <strong>{{ rec.title }}</strong> - {{ rec.category }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <strong>No tests yet!</strong> Start by taking a <a href="{{ url_for('dyslexia.index') }}">handwriting or speech analysis test</a>.
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

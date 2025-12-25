@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DyslexiAI{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <h1>Welcome, {{ current_user.username }}!</h1>
+        <p style="font-size: 1.1rem;">Here's your learning dashboard</p>
+
+        <div class="row mt-3" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <a href="{{ url_for('dyslexia.index') }}" style="text-decoration: none;">
+                <div class="card">
+                    <div class="card-body" style="text-align: center;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎯</div>
+                        <h3>Dyslexia Checker</h3>
+                        <p>Analyze your handwriting and speech patterns</p>
+                        <div class="text-primary" style="font-weight: bold;">Start Testing →</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('learning.index') }}" style="text-decoration: none;">
+                <div class="card">
+                    <div class="card-body" style="text-align: center;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📚</div>
+                        <h3>Learning Materials</h3>
+                        <p>Access personalized learning resources</p>
+                        <div class="text-primary" style="font-weight: bold;">View Materials →</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('games.index') }}" style="text-decoration: none;">
+                <div class="card">
+                    <div class="card-body" style="text-align: center;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎮</div>
+                        <h3>Games</h3>
+                        <p>Play 7 educational games</p>
+                        <div class="text-primary" style="font-weight: bold;">Play Now →</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="{{ url_for('games.scores') }}" style="text-decoration: none;">
+                <div class="card">
+                    <div class="card-body" style="text-align: center;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+                        <h3>Scoreboard</h3>
+                        <p>Track your progress and scores</p>
+                        <div class="text-primary" style="font-weight: bold;">View Scores →</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {% if avg_score > 0 %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h3>Your Statistics</h3>
+                <div class="row" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: 1rem;">
+                    <div>
+                        <p style="color: var(--text-light);">Average Score</p>
+                        <h2 style="color: var(--primary-color);">{{ "%.1f"|format(avg_score) }}</h2>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-light);">Total Games Played</p>
+                        <h2 style="color: var(--success-color);">{{ recent_scores|length }}</h2>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-light);">Tests Completed</p>
+                        <h2 style="color: var(--info-color);">{{ recent_tests|length }}</h2>
+                    </div>
+                    <div>
+                        <p style="color: var(--text-light);">Learning Progress</p>
+                        <h2 style="color: var(--secondary-color);">{{ learning_progress|length }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h3>Recent Activity</h3>
+                <div style="margin-top: 1rem;">
+                    {% if recent_scores %}
+                        <h4>Latest Game Scores</h4>
+                        <ul style="list-style: none; margin-top: 1rem;">
+                            {% for score in recent_scores[:3] %}
+                                <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                                    <strong>{{ score.game_name }}</strong> - Score: <span class="text-primary">{{ score.score }}</span>
+                                    <small class="text-light"> ({{ score.created_at.strftime('%Y-%m-%d %H:%M') }})</small>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-3">
+            <strong>Get started!</strong> Start playing games or use the dyslexia checker to begin tracking your progress.
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

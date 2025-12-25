@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Learning Materials - DyslexiAI{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Learning Materials</h1>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">← Back to Dashboard</a>
+        </div>
+
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Explore our curated learning resources to improve your reading and language skills</p>
+
+        <div class="row">
+            {% for material in materials %}
+                <div class="card" onclick="showMaterialDetail({{ material.id }})">
+                    <div class="card-body">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h3>{{ material.title }}</h3>
+                                <p class="text-light">{{ material.category }}</p>
+                            </div>
+                            <span class="badge" style="
+                                padding: 0.5rem 1rem;
+                                border-radius: 20px;
+                                background: {% if material.difficulty == 'beginner' %}var(--success-color){% elif material.difficulty == 'intermediate' %}var(--warning-color){% else %}var(--danger-color){% endif %};
+                                color: white;
+                                font-size: 0.85rem;
+                                font-weight: bold;
+                            ">
+                                {{ material.difficulty.title() }}
+                            </span>
+                        </div>
+                        <p style="margin-top: 1rem;">{{ material.description }}</p>
+                        <button onclick="startMaterial({{ material.id }})" class="btn btn-sm btn-primary mt-2">
+                            Start Learning
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div id="materialModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div class="card" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                <div class="card-header">
+                    <h3 id="modalTitle"></h3>
+                    <button onclick="closeMaterialModal()" class="btn btn-sm btn-secondary" style="float: right;">Close</button>
+                </div>
+                <div class="card-body" id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+async function showMaterialDetail(materialId) {
+    try {
+        const response = await fetch(`{{ url_for('learning.material_detail', material_id=0).replace('/0', '') }}/${materialId}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            console.error(`Error loading material: HTTP ${response.status}`);
+            alert('Error loading material');
+            return;
+        }
+        const data = await response.json();
+        
+        if (data && data.material) {
+            const material = data.material;
+            document.getElementById('modalTitle').textContent = material.title;
+            
+            // Convert markdown-style content to HTML (normalize CRLF, support dotall for bold)
+            let raw = material.content || '';
+            // Normalize CRLF to LF
+            raw = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+            // Headings (process before replacing newlines)
+            let contentHtml = raw
+                .replace(/^###\s+(.+)$/gim, '<h5>$1</h5>')
+                .replace(/^##\s+(.+)$/gim, '<h4>$1</h4>')
+                .replace(/\*\*(.*?)\*\*/gs, '<strong>$1</strong>')
+                .replace(/^-\s+/gm, '• ');
+
+            // Replace remaining single newlines with <br>
+            contentHtml = contentHtml.replace(/\n/g, '<br>');
+            
+            document.getElementById('modalContent').innerHTML = `
+                <p><strong>Category:</strong> ${material.category}</p>
+                <p><strong>Difficulty:</strong> ${material.difficulty}</p>
+                <p><strong>Description:</strong> ${material.description}</p>
+                <div style="margin-top: 1rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+                    <div>${contentHtml}</div>
+                    <button onclick="startMaterial(${material.id})" class="btn btn-primary" style="margin-top: 1rem;">Start Learning</button>
+                </div>
+            `;
+            document.getElementById('materialModal').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading material:', error);
+        alert('Error loading material');
+    }
+}
+
+function closeMaterialModal() {
+    document.getElementById('materialModal').style.display = 'none';
+}
+
+async function startMaterial(materialId) {
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : null;
+        const response = await fetch('{{ url_for("learning.start_material", material_id=0) }}'.replace('0', materialId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                ...(csrfToken ? {'X-CSRFToken': csrfToken} : {})
+            }
+        });
+        
+        if (response.ok) {
+            alert('Material started! You can now track your progress.');
+            closeMaterialModal();
+        } else {
+            alert('Error starting material');
+        }
+    } catch (error) {
+        alert('Error: ' + error);
+    }
+}
+
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('materialModal');
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+</script>
+
+<style>
+.badge {
+    display: inline-block;
+}
+
+#materialModal {
+    animation: fadeIn 0.3s ease-in;
+}
+</style>
+{% endblock %}

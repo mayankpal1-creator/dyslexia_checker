@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Games - DyslexiAI{% endblock %}
+
+{% block extra_css %}
+<style>
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.game-card {
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.game-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.game-card-icon {
+    font-size: 3rem;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.game-card-content {
+    padding: 1.5rem;
+}
+
+.game-card h3 {
+    margin: 0 0 0.5rem 0;
+}
+
+.game-card p {
+    margin-bottom: 1rem;
+    color: var(--text-light);
+}
+
+.difficulty-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--light-bg);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>Educational Games</h1>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">← Back to Dashboard</a>
+        </div>
+
+        <p style="font-size: 1.1rem; margin-bottom: 2rem;">Learn while having fun! Choose from 7 engaging games designed to improve reading and language skills.</p>
+
+        <div class="games-grid">
+            <!-- Memory Match -->
+            <a href="{{ url_for('games.memory_match') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">🧠</div>
+                    <div class="game-card-content">
+                        <h3>Memory Match</h3>
+                        <p>Match pairs of cards to enhance memory and visual recognition skills.</p>
+                        <span class="difficulty-badge">Easy</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Word Puzzle -->
+            <a href="{{ url_for('games.word_puzzle') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">🔤</div>
+                    <div class="game-card-content">
+                        <h3>Word Puzzle</h3>
+                        <p>Solve word puzzles to build vocabulary and language skills.</p>
+                        <span class="difficulty-badge">Medium</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Spelling Bee -->
+            <a href="{{ url_for('games.spelling_bee') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">🐝</div>
+                    <div class="game-card-content">
+                        <h3>Spelling Bee</h3>
+                        <p>Spell words correctly to improve spelling and phonetic awareness.</p>
+                        <span class="difficulty-badge">Medium</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Typing Master -->
+            <a href="{{ url_for('games.typing_master') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">⌨️</div>
+                    <div class="game-card-content">
+                        <h3>Typing Master</h3>
+                        <p>Practice typing words to build speed and accuracy.</p>
+                        <span class="difficulty-badge">Medium</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Rhyme Match -->
+            <a href="{{ url_for('games.rhyme_match') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">🎵</div>
+                    <div class="game-card-content">
+                        <h3>Rhyme Match</h3>
+                        <p>Match words that rhyme to develop phonetic awareness.</p>
+                        <span class="difficulty-badge">Easy</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Sentence Builder -->
+            <a href="{{ url_for('games.sentence_builder') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">📝</div>
+                    <div class="game-card-content">
+                        <h3>Sentence Builder</h3>
+                        <p>Arrange words to form correct sentences and learn grammar.</p>
+                        <span class="difficulty-badge">Hard</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Phonics Quest -->
+            <a href="{{ url_for('games.phonics_quest') }}" style="text-decoration: none;">
+                <div class="game-card">
+                    <div class="game-card-icon">🎯</div>
+                    <div class="game-card-content">
+                        <h3>Phonics Quest</h3>
+                        <p>Master phonetic sounds through interactive challenges.</p>
+                        <span class="difficulty-badge">Hard</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h3>Your Game Statistics</h3>
+                <div style="display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <div>
+                        <p class="text-light">Total Games Played</p>
+                        <h2 style="color: var(--primary-color);">0</h2>
+                    </div>
+                    <div>
+                        <p class="text-light">Average Score</p>
+                        <h2 style="color: var(--success-color);">0</h2>
+                    </div>
+                    <div>
+                        <p class="text-light">Games Completed</p>
+                        <h2 style="color: var(--info-color);">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{{ url_for('games.scores') }}" class="btn btn-secondary">View Scoreboard</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

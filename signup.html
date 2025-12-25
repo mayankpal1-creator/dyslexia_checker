@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - DyslexiAI{% endblock %}
+
+{% block content %}
+<section style="min-height: 100vh; display: flex; align-items: center; background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #fb7185 100%); position: relative; overflow: hidden;">
+    <!-- Decorative Elements -->
+    <div style="position: absolute; top: -50%; left: -10%; width: 500px; height: 500px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(40px);"></div>
+    <div style="position: absolute; bottom: -30%; right: -5%; width: 400px; height: 400px; background: rgba(255, 255, 255, 0.05); border-radius: 50%; filter: blur(40px);"></div>
+    
+    <div class="container" style="position: relative; z-index: 10;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; max-width: 1100px; margin: 0 auto;">
+            <!-- Left Side - Welcome Message -->
+            <div style="color: white;">
+                <h1 style="color: white; font-size: 2.5rem; margin-bottom: 1.5rem; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);">Start Your Journey</h1>
+                <p style="color: rgba(255, 255, 255, 0.9); font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem;">
+                    Join thousands of learners who are improving their reading and language skills with DyslexiaCheck.
+                </p>
+                <ul style="color: rgba(255, 255, 255, 0.9); list-style: none; padding: 0;">
+                    <li style="margin-bottom: 1rem; display: flex; align-items: center;">
+                        <span style="display: inline-block; width: 30px; height: 30px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-weight: bold;">✓</span>
+                        Free screening tools
+                    </li>
+                    <li style="margin-bottom: 1rem; display: flex; align-items: center;">
+                        <span style="display: inline-block; width: 30px; height: 30px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-weight: bold;">✓</span>
+                        Expert learning resources
+                    </li>
+                    <li style="margin-bottom: 1rem; display: flex; align-items: center;">
+                        <span style="display: inline-block; width: 30px; height: 30px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-weight: bold;">✓</span>
+                        Fun interactive games
+                    </li>
+                    <li style="display: flex; align-items: center;">
+                        <span style="display: inline-block; width: 30px; height: 30px; background: rgba(255, 255, 255, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 1rem; font-weight: bold;">✓</span>
+                        Progress tracking dashboard
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Right Side - Signup Form -->
+            <div style="background: white; padding: 2.5rem; border-radius: 1.5rem; box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); backdrop-filter: blur(10px);">
+                <h2 style="color: #ec4899; text-align: center; margin-bottom: 2rem; font-size: 1.75rem;">Create Account</h2>
+                
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-group">
+                        {{ form.username.label }}
+                        {% if form.username.errors %}
+                            {{ form.username(class="form-control is-invalid", style="border-color: #ef4444;", placeholder="Choose a username") }}
+                            <div style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem;">
+                                {% for error in form.username.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.username(class="form-control", placeholder="Choose a username") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.email.label }}
+                        {% if form.email.errors %}
+                            {{ form.email(class="form-control is-invalid", style="border-color: #ef4444;", placeholder="your.email@example.com") }}
+                            <div style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem;">
+                                {% for error in form.email.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.email(class="form-control", placeholder="your.email@example.com") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.password.label }}
+                        {% if form.password.errors %}
+                            {{ form.password(class="form-control is-invalid", style="border-color: #ef4444;", placeholder="Minimum 6 characters") }}
+                            <div style="color: #ef4444; font-size: 0.85rem; margin-top: 0.5rem;">
+                                {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.password(class="form-control", placeholder="Minimum 6 characters") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.confirm_password.label }}
+                        {{ form.confirm_password(class="form-control", placeholder="Confirm your password") }}
+                    </div>
+
+                    <div class="form-group">
+                        {{ form.age.label }}
+                        {{ form.age(class="form-control", placeholder="Enter your age") }}
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary btn-lg btn-block" style="margin-top: 1.5rem; border: none;">
+                        Create Account
+                    </button>
+                </form>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center;">
+                    <p style="color: #64748b; margin: 0;">Already have an account?</p>
+                    <a href="{{ url_for('auth.login') }}" style="color: #ec4899; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-block; margin-top: 0.5rem; transition: all 0.3s;">
+                        Sign in now →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Mobile Responsive Adjustment -->
+<style>
+    @media (max-width: 768px) {
+        section {
+            display: block;
+            padding: 2rem 0;
+        }
+        
+        div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+        }
+        
+        div[style*="color: white;"][style*="font-size: 2.5rem"] {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Scoreboard - DyslexiAI{% endblock %}
+
+{% block content %}
+<section>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1>📊 Scoreboard</h1>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">← Back to Dashboard</a>
+        </div>
+
+        <div class="row" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 3rem;">
+            <div class="card" style="text-align: center;">
+                <div class="card-body">
+                    <p class="text-light">Total Score</p>
+                    <h2 style="color: var(--primary-color); font-size: 2.5rem;">{{ (scores|map(attribute='score')|sum) }}</h2>
+                </div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div class="card-body">
+                    <p class="text-light">Games Played</p>
+                    <h2 style="color: var(--success-color); font-size: 2.5rem;">{{ scores|length }}</h2>
+                </div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div class="card-body">
+                    <p class="text-light">Average Score</p>
+                    <h2 style="color: var(--info-color); font-size: 2.5rem;">
+                        {% if scores %}
+                            {{ "%.1f"|format(scores|map(attribute='score')|sum / scores|length) }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h2>
+                </div>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div class="card-body">
+                    <p class="text-light">Completed</p>
+                    <h2 style="color: var(--secondary-color); font-size: 2.5rem;">
+                        {{ scores|selectattr('completed')|list|length }}
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+        {% if scores %}
+            <h2>Recent Scores</h2>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--light-bg);">
+                            <th style="padding: 1rem; text-align: left; border-bottom: 2px solid var(--border-color);">Game</th>
+                            <th style="padding: 1rem; text-align: center; border-bottom: 2px solid var(--border-color);">Score</th>
+                            <th style="padding: 1rem; text-align: center; border-bottom: 2px solid var(--border-color);">Time</th>
+                            <th style="padding: 1rem; text-align: center; border-bottom: 2px solid var(--border-color);">Difficulty</th>
+                            <th style="padding: 1rem; text-align: center; border-bottom: 2px solid var(--border-color);">Status</th>
+                            <th style="padding: 1rem; text-align: center; border-bottom: 2px solid var(--border-color);">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score in scores %}
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 1rem;">
+                                    <strong>{{ score.game_name }}</strong>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <span style="background: var(--primary-color); color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; font-weight: bold;">
+                                        {{ score.score }}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    {{ "%.1f"|format(score.time_taken) }}s
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <span class="badge" style="
+                                        padding: 0.25rem 0.75rem;
+                                        border-radius: 0.25rem;
+                                        background: {% if score.difficulty == 'easy' %}var(--success-color){% elif score.difficulty == 'medium' %}var(--warning-color){% else %}var(--danger-color){% endif %};
+                                        color: white;
+                                        font-size: 0.85rem;
+                                    ">
+                                        {{ score.difficulty.title() }}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    {% if score.completed %}
+                                        <span style="color: var(--success-color); font-weight: bold;">✓ Completed</span>
+                                    {% else %}
+                                        <span style="color: var(--warning-color); font-weight: bold;">⊙ In Progress</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <small class="text-light">{{ score.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 style="margin-top: 3rem;">Game Statistics</h2>
+            <div class="row" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                {% set game_names = scores|map(attribute='game_name')|unique|list %}
+                {% for game in game_names %}
+                    {% set game_scores = scores|selectattr('game_name', 'equalto', game)|list %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h4>{{ game }}</h4>
+                            <div style="margin-top: 1rem;">
+                                <p class="text-light">Times Played</p>
+                                <h3 style="color: var(--primary-color);">{{ game_scores|length }}</h3>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <p class="text-light">Best Score</p>
+                                <h3 style="color: var(--success-color);">
+                                    {{ game_scores|map(attribute='score')|max }}
+                                </h3>
+                            </div>
+                            <div style="margin-top: 1rem;">
+                                <p class="text-light">Average Score</p>
+                                <h3 style="color: var(--info-color);">
+                                    {{ "%.1f"|format(game_scores|map(attribute='score')|sum / game_scores|length) }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <strong>No scores yet!</strong> Start playing <a href="{{ url_for('games.index') }}">our games</a> to see your scores here.
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.badge {
+    display: inline-block;
+}
+
+table {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
